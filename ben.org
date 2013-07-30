@@ -1,0 +1,39 @@
+* Includes
+#+BEGIN_SRC emacs-lisp
+(starter-kit-load "python")
+(starter-kit-load "js")
+(starter-kit-load "haskell")
+#+END_SRC
+
+
+* Extra installed packages
+#+BEGIN_SRC emacs-lisp
+    
+    (defvar my-packages
+      (list 'flymake 'zenburn-theme 'solarized-theme
+            'coffee-mode 'flymake-coffee
+            's 'dash 'flycheck)
+      "Libraries that should be installed by default.")
+    
+    (unless package-archive-contents
+      (package-refresh-contents))
+    (dolist (package my-packages)
+      (unless (package-installed-p package)
+        (package-install package)))
+    
+#+END_SRC
+
+#+RESULTS:
+
+* Theme
+#+BEGIN_SRC emacs-lisp
+  (load-theme 'solarized-dark)
+  
+#+END_SRC
+
+* Flycheck
+#+BEGIN_SRC emacs-lisp
+  
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  
+#+END_SRC
