@@ -59,6 +59,31 @@
   (global-set-key (kbd "C-x g") 'magit-status)
   
 #+END_SRC
+** Set path from shell
+#+BEGIN_SRC emacs-lisp :results silent
+  (defun path-from-shell (sh-cmd)
+    "Get the $PATH from a login shell"
+    ;;(interactive)
+  
+    (split-string (replace-regexp-in-string "[ \t\n]*$" ""
+                                            (shell-command-to-string
+                                             (concat (executable-find sh-cmd) " --login -i -c 'echo $PATH'")))
+                  path-separator)
+    )
+  
+  (defun set-exec-path-from-shell-PATH (sh-cmd)
+    "Set up Emacs' `exec-path' and PATH environment variable to match that used by the user's shell.
+  
+  This is particularly useful under Mac OSX, where GUI apps are not started from a shell."
+    (interactive)
+    (let ((path (path-from-shell sh-cmd)))
+      (setenv "PATH" (mapconcat (lambda (e) e) path path-separator))
+      (setq exec-path path)
+      ))
+  
+  (set-exec-path-from-shell-PATH "zsh")
+  
+#+END_SRC
 * Extra installed packages
 #+BEGIN_SRC emacs-lisp :results silent
   
@@ -214,7 +239,7 @@
 #+END_SRC
 
 
-
+   
 * Org set up
 
 ** Directories
