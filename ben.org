@@ -10,7 +10,80 @@
   (global-auto-revert-mode t)
   
 #+END_SRC
+* Global key bindings
+#+BEGIN_SRC emacs-lisp :results silent
   
+  
+  ;; Indentation help
+  (global-set-key (kbd "C-x ^") 'join-line)
+  
+  ;; Start proced in a similar manner to dired
+  (global-set-key (kbd "C-x p") 'proced)
+  
+  ;; Start eshell or switch to it if it's active.
+  (global-set-key (kbd "C-x m") 'eshell)
+  
+  ;; Start a new eshell even if one is active.
+  (global-set-key (kbd "C-x M") (lambda () (interactive) (eshell t)))
+  
+  ;; Start a regular shell if you prefer that.
+  (global-set-key (kbd "C-x M-m") 'shell)
+  
+  ;; If you want to be able to M-x without meta
+  (global-set-key (kbd "C-x C-m") 'execute-extended-command)
+  
+  ;; A complementary binding to the apropos-command (C-h a)
+  (define-key 'help-command "A" 'apropos)
+  
+  ;; a complement to the zap-to-char command, that doesn't eat up the target character
+  (autoload 'zap-up-to-char "misc" "Kill up to, but not including ARGth occurrence of CHAR.")
+  (global-set-key (kbd "M-Z") 'zap-up-to-char)
+  
+  ;; Activate occur easily inside isearch
+  (define-key isearch-mode-map (kbd "C-o")
+    (lambda () (interactive)
+      (let ((case-fold-search isearch-case-fold-search))
+        (occur (if isearch-regexp
+                   isearch-string
+                 (regexp-quote isearch-string))))))
+  
+  ;; use hippie-expand instead of dabbrev
+  (global-set-key (kbd "M-/") 'hippie-expand)
+  
+  ;; replace buffer-menu with ibuffer
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
+  
+  ;; toggle menu-bar visibility
+  (global-set-key (kbd "<f12>") 'menu-bar-mode)
+  
+  (global-set-key (kbd "C-x g") 'magit-status)
+  
+#+END_SRC
+** Set path from shell
+#+BEGIN_SRC emacs-lisp :results silent
+  (defun path-from-shell (sh-cmd)
+    "Get the $PATH from a login shell"
+    ;;(interactive)
+  
+    (split-string (replace-regexp-in-string "[ \t\n]*$" ""
+                                            (shell-command-to-string
+                                             (concat (executable-find sh-cmd) " --login -i -c 'echo $PATH'")))
+                  path-separator)
+    )
+  
+  (defun set-exec-path-from-shell-PATH (sh-cmd)
+    "Set up Emacs' `exec-path' and PATH environment variable to match that used by the user's shell.
+  
+  This is particularly useful under Mac OSX, where GUI apps are not started from a shell."
+    (interactive)
+    (let ((path (path-from-shell sh-cmd)))
+      (setenv "PATH" (mapconcat (lambda (e) e) path path-separator))
+      (setq exec-path path)
+      ))
+  
+  (set-exec-path-from-shell-PATH "zsh")
+  
+#+END_SRC
 * Extra installed packages
 #+BEGIN_SRC emacs-lisp :results silent
   
@@ -166,7 +239,7 @@
 #+END_SRC
 
 
-
+   
 * Org set up
 
 ** Directories
