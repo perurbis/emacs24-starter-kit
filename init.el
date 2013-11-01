@@ -4,7 +4,8 @@
 ;;
 ;; This is the first thing to get loaded.
 ;;
-
+(require 'cask "~/dev/cask/cask.el")
+(cask-initialize)
 ;; load Org-mode from source when the ORG_HOME environment variable is set
 (when (getenv "ORG_HOME")
   (let ((org-lisp-dir (expand-file-name "lisp" (getenv "ORG_HOME"))))

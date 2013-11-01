@@ -10,9 +10,6 @@
   (global-auto-revert-mode t)
   (global-linum-mode t)
   
-  (require 'cask ".cask/cask.el")
-  (cask-initialize)
-  
 #+END_SRC
 * Global key bindings
 #+BEGIN_SRC emacs-lisp :results silent
@@ -97,26 +94,6 @@
   (set-exec-path-from-shell-PATH "zsh")
   
 #+END_SRC
-* Extra installed packages
-#+BEGIN_SRC emacs-lisp :results silent
-  
-  (defvar my-packages
-    (list 'zenburn-theme 'solarized-theme
-          'coffee-mode
-          'haskell-mode
-          'org-trello
-          'magit
-          's 'dash)
-    "Libraries that should be installed by default.")
-  
-  (unless package-archive-contents
-    (package-refresh-contents))
-  (dolist (package my-packages)
-    (unless (package-installed-p package)
-      (package-install package)))
-  
-#+END_SRC
-  
 * Theme
 #+BEGIN_SRC emacs-lisp :results silent
   (load-theme 'solarized-dark)
