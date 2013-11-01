@@ -8,6 +8,10 @@
 #+BEGIN_SRC emacs-lisp :results silent
   
   (global-auto-revert-mode t)
+  (global-linum-mode t)
+  
+  (require 'cask ".cask/cask.el")
+  (cask-initialize)
   
 #+END_SRC
 * Global key bindings
