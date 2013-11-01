@@ -37,6 +37,7 @@
 (depends-on "litable")
 (depends-on "magit")
 (depends-on "markdown-mode")
+(depends-on "multiple-cursors")
 (depends-on "org")
 (depends-on "org-plus-contrib")
 (depends-on "org-trello")

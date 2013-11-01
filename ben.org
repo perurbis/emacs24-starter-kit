@@ -63,6 +63,15 @@
   (global-set-key (kbd "C-x g") 'magit-status)
   
 #+END_SRC
+** Multiple cursors
+#+BEGIN_SRC emacs-lisp :results silent
+  
+  (require 'multiple-cursors)
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+#+END_SRC
 ** Set path from shell
 #+BEGIN_SRC emacs-lisp :results silent
   (defun path-from-shell (sh-cmd)
