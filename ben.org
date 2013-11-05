@@ -100,6 +100,28 @@
   
 #+END_SRC
 
+** Get rid of menu and scroll bar
+
+#+BEGIN_SRC emacs-lisp :results silent
+  
+  (when (window-system)
+    (tool-bar-mode -1)
+    (scroll-bar-mode -1))
+  
+#+END_SRC
+
+** Fring and mode line set up
+
+#+BEGIN_SRC emacs-lisp :results silent
+
+(when (window-system)
+  (require 'git-gutter-fringe))
+
+(global-git-gutter-mode +1)
+(setq-default indicate-buffer-boundaries 'left)
+(setq-default indicate-empty-lines +1)
+
+#+END_SRC
 * Flycheck
 #+BEGIN_SRC emacs-lisp :results silent
   (add-to-list 'load-path "src/flycheck")
