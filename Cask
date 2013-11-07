@@ -45,6 +45,7 @@
 (depends-on "paredit")
 (depends-on "pkg-info")
 (depends-on "plantuml-mode")
+(depends-on "projectile")
 (depends-on "rainbow-delimiters")
 (depends-on "rhtml-mode")
 (depends-on "rinari")
@@ -53,6 +54,7 @@
 (depends-on "s")
 (depends-on "smart-mode-line")
 (depends-on "smex")
+(depends-on "yaml-mode")
 
 (depends-on "solarized-theme")
 (depends-on "zenburn-theme")
