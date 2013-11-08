@@ -130,10 +130,16 @@
   
 #+END_SRC
 
+* Projectile setup
+#+BEGIN_SRC emacs-lisp :results silent
+  
+  (projectile-global-mode)
+
+#+END_SRC
 * Haskell Mode
 
-** Init
 #+BEGIN_SRC emacs-lisp :results silent
+  
   (load "haskell-mode-autoloads")
   (require 'haskell-mode)
   (require 'hsenv)
@@ -213,9 +219,7 @@
   
   ;;(require 'notify)
   
-  
 #+END_SRC
-
 
 * Utility functions
 
