@@ -17,6 +17,7 @@
 (depends-on "exec-path-from-shell")
 (depends-on "f")
 (depends-on "findr")
+(depends-on "flx-ido")
 (depends-on "fringe-helper")
 (depends-on "fuzzy")
 (depends-on "git")
