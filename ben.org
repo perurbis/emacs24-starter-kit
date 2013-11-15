@@ -141,6 +141,7 @@
 #+BEGIN_SRC emacs-lisp :results silent
   
   (load "haskell-mode-autoloads")
+  ;; (autoload 'ghc-init "ghc" nil t)
   (require 'haskell-mode)
   (require 'hsenv)
   (custom-set-variables
@@ -163,6 +164,7 @@
   ;; Haskell main editing mode key bindings.
   (defun haskell-hook ()
     ;; Use simple indentation.
+    ;; (ghc-init)
     (turn-on-haskell-simple-indent)
     (define-key haskell-mode-map (kbd "<return>") 'haskell-simple-indent-newline-same-col)
     (define-key haskell-mode-map (kbd "C-<return>") 'haskell-simple-indent-newline-indent)
