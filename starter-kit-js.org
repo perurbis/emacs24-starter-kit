@@ -8,27 +8,27 @@ Java-script Helpers
 
 #+begin_src emacs-lisp
 (font-lock-add-keywords
- 'espresso-mode `(("\\(function *\\)("
+ 'js2-mode `(("\\(function *\\)("
                    (0 (progn (compose-region (match-beginning 1) (match-end 1)
                                              "ƒ")
                              nil)))))
 #+end_src
 
 #+begin_src emacs-lisp
-(font-lock-add-keywords 'espresso-mode
+(font-lock-add-keywords 'js2-mode
                         '(("\\<\\(FIX\\|TODO\\|FIXME\\|HACK\\|REFACTOR\\):"
                            1 font-lock-warning-face t)))
 #+end_src
 
 #+begin_src emacs-lisp
-(autoload 'espresso-mode "espresso" "Start espresso-mode" t)
-(add-to-list 'auto-mode-alist '("\\.js$" . espresso-mode))
-(add-to-list 'auto-mode-alist '("\\.json$" . espresso-mode))
-(add-hook 'espresso-mode-hook 'moz-minor-mode)
-(add-hook 'espresso-mode-hook 'turn-on-paredit)
-(add-hook 'espresso-mode-hook 'run-starter-kit-coding-hook)
-;; (add-hook 'espresso-mode-hook 'idle-highlight)
-(setq espresso-indent-level 2)
+(autoload 'js2-mode "js2" "Start js2-mode" t)
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+(add-to-list 'auto-mode-alist '("\\.json$" . js2-mode))
+(add-hook 'js2-mode-hook 'moz-minor-mode)
+(add-hook 'js2-mode-hook 'turn-on-paredit)
+(add-hook 'js2-mode-hook 'run-starter-kit-coding-hook)
+;; (add-hook 'js2-mode-hook 'idle-highlight)
+(setq js2-indent-level 2)
 #+end_src
 
 #+begin_src emacs-lisp

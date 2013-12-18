@@ -4,6 +4,7 @@
 (source "marmalade" "http://marmalade-repo.org/packages/")
 
 (depends-on "auto-complete")
+(depends-on "ac-js2")
 (depends-on "cask")
 (depends-on "cider")
 (depends-on "cider-decompile")
@@ -36,6 +37,7 @@
 (depends-on "inflections")
 (depends-on "javap-mode")
 (depends-on "jump")
+(depends-on "js2-mode")
 (depends-on "less-css-mode")
 (depends-on "litable")
 (depends-on "magit")
@@ -47,6 +49,7 @@
 (depends-on "pallet")
 (depends-on "paredit")
 (depends-on "pkg-info")
+(depends-on "pivotal-tracker")
 (depends-on "plantuml-mode")
 (depends-on "projectile")
 (depends-on "rainbow-delimiters")
