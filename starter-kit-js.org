@@ -7,11 +7,12 @@ This is part of the [[file:starter-kit.org][Emacs Starter Kit]].
 Java-script Helpers
 
 #+begin_src emacs-lisp
-(font-lock-add-keywords
- 'js2-mode `(("\\(function *\\)("
-                   (0 (progn (compose-region (match-beginning 1) (match-end 1)
-                                             "ƒ")
-                             nil)))))
+  (require 'js2-mode)
+  (font-lock-add-keywords
+   'js2-mode `(("\\(function *\\)("
+                     (0 (progn (compose-region (match-beginning 1) (match-end 1)
+                                               "ƒ")
+                               nil)))))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -25,7 +26,7 @@ Java-script Helpers
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (add-to-list 'auto-mode-alist '("\\.json$" . js2-mode))
 (add-hook 'js2-mode-hook 'moz-minor-mode)
-(add-hook 'js2-mode-hook 'turn-on-paredit)
+;; (add-hook 'js2-mode-hook 'turn-on-paredit)
 (add-hook 'js2-mode-hook 'run-starter-kit-coding-hook)
 ;; (add-hook 'js2-mode-hook 'idle-highlight)
 (setq js2-indent-level 2)
