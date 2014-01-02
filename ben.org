@@ -1,8 +1,8 @@
 * Includes
 #+BEGIN_SRC emacs-lisp :results silent
-(starter-kit-load "python")
-(starter-kit-load "js")
-(starter-kit-load "haskell")
+  (starter-kit-load "python")
+  (starter-kit-load "js")
+  (starter-kit-load "haskell")
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :results silent
