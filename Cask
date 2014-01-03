@@ -61,6 +61,7 @@
 (depends-on "smart-mode-line")
 (depends-on "smex")
 (depends-on "yaml-mode")
+(depends-on "wakatime-mode")
 
 (depends-on "solarized-theme")
 (depends-on "zenburn-theme")
