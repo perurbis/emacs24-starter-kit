@@ -142,11 +142,13 @@
   
   (load "haskell-mode-autoloads")
   ;; (autoload 'ghc-init "ghc" nil t)
+  (add-to-list 'load-path "src/shm/elisp") 
   (require 'haskell-mode)
   (require 'hsenv)
+  (require 'shm)
   (custom-set-variables
    ;; Use ghci for the GHCi session. Ensures our dependencies are in scope.
-   '(haskell-process-type 'cabal-ghci)
+   '(haskell-process-type 'cabal-repl)
    
    ;; Use notify.el (if you have it installed) at the end of running
    ;; Cabal commands or generally things worth notifying.
@@ -159,6 +161,7 @@
    '(haskell-stylish-on-save t))
   
   (add-hook 'haskell-mode-hook 'haskell-hook)
+  (add-hook 'haskell-mode-hook 'structured-haskell-mode)
   (add-hook 'haskell-cabal-mode-hook 'haskell-cabal-hook)
   
   ;; Haskell main editing mode key bindings.
