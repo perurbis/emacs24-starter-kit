@@ -59,6 +59,7 @@
 (depends-on "org")
 (depends-on "org-plus-contrib")
 (depends-on "org-trello")
+(depends-on "ox-reveal")
 (depends-on "pallet")
 (depends-on "pandoc-mode")
 (depends-on "paredit")
