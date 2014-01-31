@@ -136,6 +136,27 @@
   (projectile-global-mode)
 
 #+END_SRC
+
+* Helm
+#+BEGIN_SRC emacs-lisp :results silent
+  (require 'helm-misc)
+  (require 'helm-projectile)
+  
+  (defun helm-prelude ()
+    "Preconfigured `helm'."
+    (interactive)
+    (condition-case nil
+        (if (projectile-project-root)
+            (helm-projectile)
+          ;; otherwise fallback to `helm-mini'
+          (helm-mini))
+      ;; fall back to helm mini if an error occurs (usually in `projectile-project-root')
+      (error (helm-mini))))
+  
+  (eval-after-load 'prelude-mode
+    '(define-key prelude-mode-map (kbd "C-c h") 'helm-prelude))
+  
+#+END_SRC
 * Haskell Mode
 
 #+BEGIN_SRC emacs-lisp :results silent
@@ -158,7 +179,7 @@
    '(haskell-tags-on-save t)
   
    ;; To enable stylish on save.
-   '(haskell-stylish-on-save t))
+   '(haskell-stylish-on-save nil))
   
   (add-hook 'haskell-mode-hook 'haskell-hook)
   (add-hook 'haskell-mode-hook 'structured-haskell-mode)
