@@ -1,5 +1,5 @@
 name:                structured-haskell-mode
-version:             1.0.0
+version:             1.0.2
 synopsis:            Structured editing Emacs mode for Haskell
 description:         Structured editing Emacs mode for Haskell.
 homepage:            https://github.com/chrisdone/structured-haskell-mode
@@ -11,12 +11,14 @@ copyright:           Chris Done 2013
 category:            Development
 build-type:          Simple
 cabal-version:       >=1.8
-data-files:          elisp/shm.el elisp/shm-ast-documentation.el
-                     elisp/shm-test.el elisp/shm-tests.el
+data-files:          elisp/shm-ast-documentation.el
+                     elisp/shm-customizations.el
+                     elisp/shm.el
+                     elisp/shm-evaporate.el
 
 executable structured-haskell-mode
   main-is:           Main.hs
-  ghc-options:       -O2
+  ghc-options:       -O2 -Wall
   hs-source-dirs:    src
   build-depends:     base >= 4 && < 5,
                      haskell-src-exts >= 1.14.0
