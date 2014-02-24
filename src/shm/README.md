@@ -11,6 +11,8 @@ for you. Given that, some assumptions about style are made in
 structured-haskell-mode and are best described by
 [this style guide](https://github.com/chrisdone/haskell-style-guide).
 
+[![Build Status](https://travis-ci.org/chrisdone/structured-haskell-mode.png)](https://travis-ci.org/chrisdone/structured-haskell-mode)
+
 ## Features
 
 Its features work by parsing the current declaration with an
@@ -25,7 +27,7 @@ in place, one is able to do all of the operations that paredit can do.
 
 Feature | Explanation
 --- | --- | ---
-![newline-indent](http://chrisdone.com/structured-haskell-mode/gifs/newline-indent.gif) | **Indenting**: `shm/newline-indent` (`C-j`) takes the current node and its type into consideration giving very predictable and useful behaviour.
+![newline-indent](http://chrisdone.com/structured-haskell-mode/gifs/newline-indent-cj.gif) | **Indenting**: `shm/newline-indent` (`C-j`) takes the current node and its type into consideration giving very predictable and useful behaviour.
 ![goto-parent](http://chrisdone.com/structured-haskell-mode/gifs/goto-parent.gif) | **Going to parent**: `shm/goto-parent` (`M-a`) jumps to the start of the parent.
 ![goto-parent-end](http://chrisdone.com/structured-haskell-mode/gifs/goto-parent-end.gif) | **Going to parent end**: `shm/goto-parent-end` (`)`) jumps to the end of the parent.
 ![add-list-item](http://chrisdone.com/structured-haskell-mode/gifs/add-list-item.gif) | **Adding a list item**: `shm/newline-indent` (`C-j`) will automatically add a comma when inside a list.
@@ -36,7 +38,7 @@ Feature | Explanation
 ![record-syntax](http://chrisdone.com/structured-haskell-mode/gifs/record-syntax.gif) | **Record syntax**: Creating new elements with record syntax, like lists (and tuples) automatically adds the right separators.
 ![transposition](http://chrisdone.com/structured-haskell-mode/gifs/transposition.gif) | **Transposition**: `shm/tranpose` (`C-M-t`) will swap two sibling nodes. **Currently removed**
 ![kill-yank](http://chrisdone.com/structured-haskell-mode/gifs/kill-yank.gif) | **Copy/pasting**: `shm/kill` (`M-k`) and `shm/yank` (`C-y`) take indentation into account, and automatically normalize so that re-inserting will indent properly.
-![kill-lines](http://chrisdone.com/structured-haskell-mode/gifs/kill-multiple-line.gif) | **Killing lines**: `shm/kill-line` (`C-k`) and `shm/yank` (`C-y`) also take indentation into account for killing and pasting, working with multiple lines at once happily.
+![kill-lines](http://chrisdone.com/structured-haskell-mode/gifs/ck.gif) | **Killing lines**: `shm/kill-line` (`C-k`) and `shm/yank` (`C-y`) also take indentation into account for killing and pasting, working with multiple lines at once happily.
 
 See `shm.el` for other keybindings. You might want to disable or
 change some of the bindings to suit your tastes.
@@ -52,6 +54,8 @@ the parsing.
 
     $ cd structured-haskell-mode
     $ cabal install
+    $ cd elisp/
+    $ make
 
 Add the elisp library to your `load-path` and require the library.
 
@@ -61,6 +65,9 @@ Add the elisp library to your `load-path` and require the library.
 Then add it to your haskell-mode-hook:
 
     (add-hook 'haskell-mode-hook 'structured-haskell-mode)
+
+Turn off haskell-indentation-modes. They are incompatible with
+structured-haskell-mode. It has its own indentation functionality.
 
 You'll want to customize these two variables: `shm-quarantine-face`
 and `shm-current-face` to something that better suites your color
@@ -106,20 +113,23 @@ You can try:
 
         (setq shm-program-name "/absolute/path/to/structured-haskell-mode")
 
+3. Get the `exec-path-from-shell` package
+   [here](https://github.com/purcell/exec-path-from-shell.git) and try that.
+
 After that, disable and re-enable `structured-haskell-mode`.
 
 ## Development
 
+Byte-compiling:
+
+    emacs -Q --batch shm.el --eval "(progn (add-to-list 'load-path \".\") (emacs-lisp-byte-compile))"
+
 ### Run tests
 
-You can run the tests with the following command line:
+You can run the tests with the following:
 
-    emacs -l shm-ast-documentation.el \
-          -l shm.el \
-          -l shm-test.el \
-          -l shm-tests.el \
-          --eval '(shm-test/run-all)' \
-          --debug
+    (require 'shm-test')
+    M-x shm-test/run-all
 
 ### Write tests
 
@@ -149,3 +159,42 @@ it's the difference between 15ms and 30ms for a 400 line module, it
 really does not matter. We're parsing declarations and individual
 nodes. Plus the GHC tree is more annoying to traverse generically due
 to its partiality.
+
+## Reporting a bug
+
+***Note:*** If you get a parse error (e.g. via `M-x shm/test-exe`) for
+   valid code that is using fairly new (read: couple years) a GHC
+   extension, you are probably hitting the fact that
+   [HSE](https://github.com/haskell-suite/haskell-src-exts/issues/19)
+   doesn't parse a bunch of newer GHC extensions. SHM _does not do any
+   parsing itself_, it
+   [uses HSE](https://github.com/chrisdone/structured-haskell-mode/blob/master/src/Main.hs). There
+   are some patches in the HSE repo, provided as pull requests, which
+   you can try applying to a local copy of HSE and then recompile SHM
+   with the new version.
+
+To get extra useful information, always run:
+
+    M-: (setq debug-on-error t)
+
+And then re-run the same thing that gave you the problem. It will give
+you a backtrace that you can paste into the issue.
+
+When reporting a bug, please write in the following format:
+
+    [Any general summary/comments if desired]
+
+    Steps to reproduce:
+
+        Type blah in the buffer.
+        Hit x key.
+        See some change z.
+        Hit y key.
+
+    Expected:
+
+    What I expected to see and happen.
+
+    Actual:
+
+    What actually happened.

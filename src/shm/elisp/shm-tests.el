@@ -1,5 +1,148 @@
+;;; shm.el --- Tests for structured-haskell-mode
+
+;; Copyright (c) 2013 Chris Done. All rights reserved.
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; A big list of tests.
+
+;;; Code:
+
 (defvar shm-tests
   (list
+   (list :name "newline-indent-type-sig-arrows"
+         :start-buffer-content "outputWith :: Show a => String -> String -> String -> IO ()
+"
+         :start-cursor 22
+         :finish-cursor 56
+         :current-node-overlay '(37 84)
+         :end-buffer-content "outputWith :: Show a \n           => String \n           -> String -> String -> IO ()
+"
+         :kbd "
+\346
+")
+   (list :name "newline-indent-type-sig"
+         :start-buffer-content "outputWith :: String -> String -> String -> IO ()
+"
+         :start-cursor 25
+         :finish-cursor 40
+         :current-node-overlay '(40 46)
+         :end-buffer-content "outputWith :: String -> \n              String -> String -> IO ()
+"
+         :kbd "
+")
+   (list :name "qualify-import"
+         :start-buffer-content "import qualified Data.Conduit.List as CL
+"
+         :start-cursor 31
+         :finish-cursor 31
+         :current-node-overlay '(18 35)
+         :end-buffer-content "import qualified Data.Conduit.List as CL
+"
+         :kbd "")
+   (list :name "split-list"
+         :start-buffer-content "main = print [foo,bar,mu]
+"
+         :start-cursor 19
+         :finish-cursor 21
+         :current-node-overlay '(21 24)
+         :end-buffer-content "main = print [foo] [bar,mu]
+"
+         :kbd [134217848 115 104 109 47 115 112 108 105 116 45 108 105 115 116 return])
+   (list :name "wrap-delimiters"
+         :start-buffer-content "main = do bar
+          mu
+          zot
+"
+         :start-cursor 8
+         :finish-cursor 9
+         :current-node-overlay '(9 44)
+         :end-buffer-content "main = [do bar
+           mu
+           zot]
+"
+         :kbd [201326624 91])
+   (list :name "move-by-paragraphs"
+         :start-buffer-content "clockOut config project task reason = foo
+-- | Clock in or out.
+clock :: Config -> Entry -> IO ()
+
+"
+         :start-cursor 1
+         :finish-cursor 1
+         :current-node-overlay '(1 9)
+         :end-buffer-content "clockOut config project task reason = foo
+-- | Clock in or out.
+clock :: Config -> Entry -> IO ()
+
+"
+         :kbd "\375\375\375\375\375\373\373\373\373\373")
+   (list :name "skip-trailing-comments"
+         :start-buffer-content "foo = do foo
+         let bar = 23
+             bob = 23
+         -- bar
+         -- test
+         bar
+
+"
+         :start-cursor 23
+         :finish-cursor 57
+         :current-node-overlay '(55 57)
+         :end-buffer-content "foo = do foo
+         let bar = 23
+             bob = 23
+         -- bar
+         -- test
+         bar
+
+"
+         :kbd "\206")
+   (list :name "kill-with-whitespace"
+         :start-buffer-content "foo = 123
+
+bar = 123
+
+mu = 123
+
+"
+         :start-cursor 11
+         :finish-cursor 22
+         :current-node-overlay '(22 25)
+         :end-buffer-content "foo = 123
+
+mu = 123
+
+bar = 123
+
+"
+         :kbd [67108896 14 5 23 4 14 5 return return 25])
+   (list :name "space-reindent"
+         :start-buffer-content "main = do let x = 123
+          undefined
+
+"
+         :start-cursor 5
+         :finish-cursor 6
+         :current-node-overlay '(1 6)
+         :end-buffer-content "main  = do let x = 123
+           undefined
+
+"
+         :kbd " ")
    (list :name "goto-parent"
          :end-buffer-content "main = x
 "
@@ -165,18 +308,27 @@ zot")
 "
          :kbd [delete backspace])
    (list :name "kill-line"
-         :start-buffer-content "main = do putStrLn (foo bar mu)
-          case x y z of
-            Just p -> x
+         :start-buffer-content "main = do putStrLn (f bar mu)
 "
          :start-cursor 21
-         :finish-cursor 38
-         :current-node-overlay '(38 38)
+         :finish-cursor 21
+         :current-node-overlay '(20 22)
          :end-buffer-content "main = do putStrLn ()
-          case  of
-            Just p -> x
 "
-         :kbd "")
+         :kbd "")
+   (list :name "kill-line-rest"
+         :start-buffer-content "main = do putStrLn
+             (foo bar mu)
+          case x y z of
+            Just p -> x
+
+"
+         :start-cursor 56
+         :finish-cursor 56
+         :current-node-overlay 'nil
+         :end-buffer-content "main = do putStrLn
+             (foo bar mu)\n          \n"
+         :kbd "")
    (list :name "isearch"
          :start-buffer-content "main = do foo
           bar
@@ -315,20 +467,6 @@ parseModulePragma mode code =
          :end-buffer-content "main = x
 "
          :kbd [backspace])
-   (list :name "swing-down"
-         :start-buffer-content "main = do foo bar
-          mu zot
-
-"
-         :start-cursor 9
-         :finish-cursor 14
-         :current-node-overlay '(14 17)
-         :end-buffer-content "main = do
-  foo bar
-  mu zot
-"
-         :kbd "
-")
    (list :name "swing-up"
          :start-buffer-content "hai = do
   foo bar
@@ -340,6 +478,17 @@ parseModulePragma mode code =
          :end-buffer-content "hai = do foo bar
          mu zot
 "
-         :kbd "")))
+         :kbd "")
+   (list :name "pragmas"
+         :start-buffer-content "{}
+"
+         :start-cursor 2
+         :finish-cursor 5
+         :current-node-overlay 'nil
+         :end-buffer-content "{-#  #-}
+"
+         :kbd "-#")))
 
 (provide 'shm-tests)
+
+;;; shm-tests.el ends here
