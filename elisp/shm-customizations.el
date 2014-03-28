@@ -123,11 +123,37 @@ but others may differ."
   :group 'shm
   :type 'boolean)
 
+(defcustom shm-prevent-parent-deletion
+  t
+  "Prevent backspacing over parent heads that would break the
+syntax."
+  :group 'shm
+  :type 'boolean)
+
 (defcustom shm-idle-timeout
   0.2
   "Number of seconds before re-parsing."
   :group 'shm
   :type 'string)
+
+(defcustom shm-indent-point-after-adding-where-clause
+  nil
+  "Whether to indent point to the next line when inseting where clause, e.g.
+| being a point:
+
+foo x = ...
+  where
+    |
+
+when option is t, as opposed to
+
+foo x = ...
+  where |
+
+when option is nil.
+"
+  :group 'shm
+  :type 'boolean)
 
 
 ;; Provide
