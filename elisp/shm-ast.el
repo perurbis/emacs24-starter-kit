@@ -110,25 +110,64 @@ and instate this one."
                   (/= end shm-last-parse-end))
           (setq shm-last-parse-start start)
           (setq shm-last-parse-end end)
-          (let ((ast (shm-get-nodes (shm-get-ast "decl"
-                                                 start
-                                                 end)
-                                    start
-                                    end)))
-            (if ast
-                (progn (setq shm-lighter " SHM")
-                       (when pair
-                         (shm-delete-markers pair))
-                       (shm-set-decl-ast start ast)
-                       ;; Delete only quarantine overlays.
-                       (shm-delete-overlays (point-min) (point-max) 'shm-quarantine)
-                       (shm/init)
-                       ast)
-              (progn
-                (when shm-display-quarantine
-                  (shm-quarantine-overlay start end))
-                (setq shm-lighter " SHM!")
-                nil))))))))
+          (let ((parsed-ast (shm-get-ast (if (bound-and-true-p structured-haskell-repl-mode)
+                                             "stmt"
+                                           "decl")
+                                         start end)))
+            (cl-flet ((bail ()
+                            (when shm-display-quarantine
+                              (shm-quarantine-overlay start end))
+                            (setq shm-lighter " SHM!")
+                            nil))
+              (if parsed-ast
+                  (progn
+                    (when (bound-and-true-p structured-haskell-repl-mode)
+                      (shm-font-lock-region start end))
+                    (let ((ast (shm-get-nodes parsed-ast start end)))
+                      (if ast
+                          (progn (setq shm-lighter " SHM")
+                                 (when pair
+                                   (shm-delete-markers pair))
+                                 (shm-set-decl-ast start ast)
+                                 ;; Delete only quarantine overlays.
+                                 (shm-delete-overlays (point-min) (point-max) 'shm-quarantine)
+                                 (shm/init)
+                                 ast)
+                        (bail))))
+                (bail)))))))))
+
+(defun shm-font-lock-region (start end)
+  "When in a REPL, we don't typically have font locking, so we
+  should manually perform a font-lock whenever we get a valid
+  parse."
+  (unless (= (1+ start) end)
+    (let ((point (point))
+          (inhibit-modification-hooks t)
+          (list buffer-undo-list)
+          (string (buffer-substring-no-properties start end)))
+      (unless (string-match "^:" string)
+        (let ((fontified (shm-fontify-as-mode string
+                                              'haskell-mode))
+              (overlays (mapcar (lambda (o)
+                                  (list o
+                                        (overlay-start o)
+                                        (overlay-end o)))
+                                (overlays-in start end))))
+          (delete-region start end)
+          (insert fontified)
+          (goto-char point)
+          ;; Restore overlay positions
+          (loop for o in overlays
+                do (move-overlay (nth 0 o) (nth 1 o) (nth 2 o)))
+          (setq buffer-undo-list list))))))
+
+(defun shm-fontify-as-mode (text mode)
+  "Fontify TEXT as MODE, returning the fontified text."
+  (with-temp-buffer
+    (funcall mode)
+    (insert "x=" text)
+    (font-lock-fontify-buffer)
+    (buffer-substring (+ (point-min) (length "x=")) (point-max))))
 
 (defun shm-get-ast (type start end)
   "Get the AST for the given region at START and END. Parses with TYPE.
@@ -141,7 +180,7 @@ it, that should bring down the roundtrip time significantly, I'd
 imagine."
   (let ((message-log-max nil)
         (buffer (current-buffer)))
-    (when (> end (1+ start))
+    (when (> end start)
       (with-temp-buffer
         (let ((temp-buffer (current-buffer)))
           (with-current-buffer buffer
@@ -260,6 +299,27 @@ expected to work."
       (or (looking-at "^-}$")
           (looking-at "^{-$")))
     nil)
+   ((bound-and-true-p structured-haskell-repl-mode)
+    (case major-mode
+      (haskell-interactive-mode
+       ;; If the prompt start is available.
+       (when (boundp 'haskell-interactive-mode-prompt-start)
+         ;; Unless we're running code.
+         (unless (> (point)
+                    (save-excursion (goto-char haskell-interactive-mode-prompt-start)
+                                    (line-end-position)))
+           ;; When we're within the prompt and not on some output lines or whatever.
+           (when (and (>= (point) haskell-interactive-mode-prompt-start)
+                      (not (= haskell-interactive-mode-prompt-start
+                              (line-end-position))))
+             (let ((whole-line (buffer-substring-no-properties
+                                haskell-interactive-mode-prompt-start
+                                (line-end-position))))
+               ;; Don't activate if we're doing a GHCi command.
+               (unless (string-match "^:" whole-line)
+                 (cons haskell-interactive-mode-prompt-start
+                       (line-end-position)))))))
+       )))
    ;; Otherwise we just do our line-based hack.
    (t
     (save-excursion
@@ -349,7 +409,7 @@ NODE-PAIR to use the specific node-pair (index + node)."
       (let* ((i (if (= (point) (car (ring-ref stack 0)))
                     1
                   0))
-            (pair (ring-ref stack i)))
+             (pair (ring-ref stack i)))
         (when pair
           (goto-char (car pair))
           (shm-set-node-overlay (cdr pair) nil t)
@@ -452,9 +512,7 @@ child, and in fact is common."
                   (string= (shm-node-type-name actual-parent)
                            (shm-node-type-name maybe-parent-parent))
                   (and shm-skip-applications
-                       (or (eq (shm-node-cons actual-parent) 'App)
-                           (eq (shm-node-cons actual-parent) 'InfixApp)
-                           (eq (shm-node-cons actual-parent) 'TyApp)))
+                       (shm-node-app-p actual-parent))
                   (eq (shm-node-cons actual-parent)
                       (shm-node-cons maybe-parent-parent)))
              (shm-node-parent actual-parent-pair))

@@ -25,7 +25,7 @@
   yank (i.e. with M-y), you need to be able to erase the previous
   yank. This is simply a region.")
 
-(defun shm-appropriate-adjustment-point ()
+(defun shm-appropriate-adjustment-point (direction)
   "Go to the appropriate adjustment point.
 
 This is called before calling `shm-adjust-dependents', because some places, e.g.
@@ -45,10 +45,19 @@ zoo| = do
 
 And use our normal adjustment test there. After all, only thing
 after 'zoo' are *really* dependent."
-  (let ((current (shm-current-node)))
-    (when (and current
-               (<= (shm-node-end current) (line-end-position)))
-      (goto-char (shm-node-end current)))))
+  (unless (eolp)
+    (let ((current (shm-current-node)))
+      (case direction
+        ('forward
+         (when (and current
+                    (< (shm-node-end current) (line-end-position))
+                    (not (and (looking-at " ")
+                              (looking-back " "))))
+           (goto-char (shm-node-end current))))
+        ('backward
+         (when (and current
+                    (> (shm-node-start current) (line-beginning-position)))
+           (goto-char (shm-node-start current))))))))
 
 (defun shm-adjust-dependents (end-point n)
   "Adjust dependent lines by N characters that depend on this
@@ -58,8 +67,11 @@ line after END-POINT."
     (let ((line (line-number-at-pos))
           (column (current-column)))
       (when (and (not (< column (shm-indent-spaces)))
-                 (not (and (looking-back "^[ ]+")
-                           (looking-at "[ ]*")))
+                 ;; I don't remember what this is for. I'm removing
+                 ;; it. If it causes problems, I'll deal with it then.
+                 ;;
+                 ;; (not (and (looking-back "^[ ]+")
+                 ;;           (looking-at "[ ]*")))
                  (save-excursion (goto-char end-point)
                                  (forward-word)
                                  (= (line-number-at-pos) line)))
@@ -67,8 +79,10 @@ line after END-POINT."
                   (goto-char (line-end-position))
                   (let ((current-pair (shm-node-backwards)))
                     (when current-pair
-                      (string= (shm-node-type-name (cdr current-pair))
-                               "Rhs"))))
+                      (or (string= (shm-node-type-name (cdr current-pair))
+                                   "Rhs")
+                          (eq (shm-node-cons (cdr current-pair))
+                              'Lambda)))))
           (shm-move-dependents n
                                end-point))))))
 
@@ -109,12 +123,12 @@ for top-level functions and things like that."
 (defun shm-insert-string (string)
   "Insert the given string."
   (save-excursion
-    (shm-appropriate-adjustment-point)
+    (shm-appropriate-adjustment-point 'forward)
     (shm-adjust-dependents (point) (length string)))
   (insert string)
   (shm/init t))
 
-(defun shm-insert-indented (do-insert)
+(defun shm-insert-indented (do-insert &optional no-adjust-dependents)
   "Insert, indented in The Right Way. Calls DO-INSERT to do the insertion.
 
 This function assumes a certain semantic meaning towards the
@@ -175,7 +189,8 @@ operation."
              "\n" "\\\\n\\\\\n\\\\"
              string))
          string)))
-    (when (= line (line-beginning-position))
+    (when (and (= line (line-beginning-position))
+               (not no-adjust-dependents))
       (shm-adjust-dependents start (- (current-column)
                                       column)))
     (let ((end (point)))
@@ -310,7 +325,7 @@ the line."
   (let* ((vector (shm-decl-ast))
          (current-pair (shm-current-node-pair))
          (current (cdr current-pair))
-         (parent-pair (shm-node-ancestor-at-point current-pair (point)))
+         (parent-pair (shm-node-ancestor-for-kill current-pair (point)))
          (parent (cdr parent-pair)))
     (loop for i
           from 0
@@ -337,6 +352,16 @@ the line."
                                   line-end-position)
                            (kill-region (point)
                                         line-end-position)))))))))
+
+(defun shm-node-ancestor-for-kill (current-pair point)
+  "Get the ancestor for greedy killing."
+  (let* ((current (cdr current-pair))
+         (parent-pair (shm-node-parent current-pair))
+         (parent (cdr parent-pair)))
+    (if (and (shm-node-app-p parent)
+             (< (shm-node-end current) (line-end-position)))
+        parent-pair
+      (shm-node-ancestor-at-point current-pair point))))
 
 (defun shm-kill-node (&optional save-it node start do-not-delete)
   "Kill the current node.
