@@ -20,11 +20,12 @@
 (require 'shm-macros)
 (require 'shm-slot)
 (require 'shm-layout)
+(require 'shm-indent)
 
 (defun shm-post-self-insert ()
   "Self-insertion handler."
   (save-excursion
-    (shm-appropriate-adjustment-point)
+    (shm-appropriate-adjustment-point 'forward)
     (forward-char -1)
     (shm-adjust-dependents (point) 1)))
 
@@ -77,9 +78,10 @@
        ((looking-back "[^a-zA-Z0-9_]let")
         (cond
          ((let ((current (shm-current-node)))
-            (not (or (eq 'Do (shm-node-cons current))
-                     (eq 'BDecls (shm-node-cons current))
-                     (string= "Stmt" (shm-node-type-name current)))))
+            (or (not (or (eq 'Do (shm-node-cons current))
+                         (eq 'BDecls (shm-node-cons current))
+                         (string= "Stmt" (shm-node-type-name current))))
+                (bound-and-true-p structured-haskell-repl-mode)))
           (shm-auto-insert-let))
          (t (shm-auto-insert-stmt 'let))))
        ((and (looking-back "module")
@@ -106,6 +108,9 @@ also space out any neccessary spacing."
                      (shm-actual-node)
                    current-node)))
       (cond
+       ((and (shm-in-string)
+             (looking-back "\\\\"))
+        (insert "\""))
        ((shm-find-overlay 'shm-quarantine)
         (insert "\"\"")
         (forward-char -1))
@@ -210,7 +215,17 @@ the current node to the parent."
   (if (and (looking-back "{-")
            (looking-at "-}"))
       (progn (insert "#  #")
-             (forward-char -2))
+             (forward-char -2)
+             (let ((pragma (ido-completing-read "Pragma: "
+                                                shm-pragmas)))
+               (insert pragma
+                       " ")
+               (when (string= pragma "LANGUAGE")
+                 (insert (ido-completing-read
+                          "Language: "
+                          (remove-if (lambda (s) (string= s ""))
+                                     (split-string (shell-command-to-string "ghc --supported-languages")
+                                                   "\n")))))))
     (self-insert-command n)))
 
 (defun shm/open-paren ()
@@ -352,10 +367,10 @@ parse errors that are rarely useful. For example:
     ;; This is the base case, we assume that we can freely delete
     ;; whatever we're looking back at, and that the node will be able
     ;; to re-parse it.
-    (t (save-excursion
-         (shm-appropriate-adjustment-point)
-         (shm-adjust-dependents (point) -1))
-       (shm-delete-char))))
+    (t (shm-delete-char)
+       (save-excursion
+         (shm-appropriate-adjustment-point 'backward)
+         (shm-adjust-dependents (point) -1)))))
   (shm/init t))
 
 (defun shm-prevent-parent-deletion-p ()
@@ -441,6 +456,8 @@ here."
       (cond
        ((shm-find-overlay 'shm-quarantine)
         (if (not (or (looking-back "[ ,[({\\]")
+                     (and (looking-back "\\$")
+                          (string= "(" open))
                      (bolp)))
             (progn (shm-insert-string " ") 1)
           0)
@@ -515,5 +532,18 @@ do x <- |
          (inhibit-read-only t))
      (delete-region (shm-node-start current)
                     (shm-node-end current)))))
+
+(defun shm/export ()
+  "Export the identifier at point."
+  (interactive)
+  (let ((name (shm-node-string (shm-actual-node))))
+    (save-excursion
+      (goto-char (point-min))
+      (search-forward-regexp "^module")
+      (search-forward-regexp " where")
+      (search-backward-regexp ")")
+      (shm/reparse)
+      (shm/newline-indent)
+      (insert name))))
 
 (provide 'shm-insert-del)

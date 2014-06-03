@@ -63,6 +63,11 @@ deletion. The markers will be garbage collected eventually."
   (save-excursion (goto-char (shm-node-start n))
                   (current-column)))
 
+(defun shm-node-start-line (n)
+  "Get the starting line of N."
+  (save-excursion (goto-char (shm-node-start n))
+                  (line-number-at-pos)))
+
 (defun shm-node-indent-column (n)
   "Get the starting column of N."
   (+ (shm-node-start-column n)
@@ -89,5 +94,16 @@ deletion. The markers will be garbage collected eventually."
           (shm-node-cons n)
           (shm-node-start n)
           (shm-node-end n)))
+
+(defun shm-node-string (n)
+  "Get the string of the region spanned by the node."
+  (buffer-substring-no-properties (shm-node-start n)
+                                  (shm-node-end n)))
+
+(defun shm-node-app-p (node)
+  "Is the given node an application of some kind?"
+  (or (eq (shm-node-cons node) 'App)
+      (eq (shm-node-cons node) 'InfixApp)
+      (eq (shm-node-cons node) 'TyApp)))
 
 (provide 'shm-node)
