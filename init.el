@@ -5,6 +5,7 @@
 ;; This is the first thing to get loaded.
 ;;
 (require 'cask "~/dev/cask/cask.el")
+;;(package-initialize)
 (cask-initialize)
 ;; load Org-mode from source when the ORG_HOME environment variable is set
 (when (getenv "ORG_HOME")

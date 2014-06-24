@@ -1,6 +1,6 @@
 * Includes
 #+BEGIN_SRC emacs-lisp :results silent
-  (starter-kit-load "python")
+  ;;(starter-kit-load "python")
   (starter-kit-load "js")
   (starter-kit-load "haskell")
 #+END_SRC
@@ -166,7 +166,7 @@
   (add-to-list 'load-path "src/shm/elisp") 
   (require 'haskell-mode)
   (require 'hsenv)
-  (require 'shm)
+  ;;(require 'shm)
   (custom-set-variables
    ;; Use ghci for the GHCi session. Ensures our dependencies are in scope.
    '(haskell-process-type 'cabal-repl)
@@ -182,7 +182,7 @@
    '(haskell-stylish-on-save nil))
   
   (add-hook 'haskell-mode-hook 'haskell-hook)
-  (add-hook 'haskell-mode-hook 'structured-haskell-mode)
+  ;;(add-hook 'haskell-mode-hook 'structured-haskell-mode)
   (add-hook 'haskell-cabal-mode-hook 'haskell-cabal-hook)
   
   ;; Haskell main editing mode key bindings.
@@ -247,6 +247,303 @@
   
 #+END_SRC
 
+* Lisps
+** All
+#+BEGIN_SRC emacs-lisp
+  (defun standard-lisp-modes ()
+    ;;(standard-smartparens-bindings)
+
+    (sp-local-pair major-mode "'" nil :actions nil)
+    (sp-local-pair major-mode "`" nil :actions nil)
+    (local-set-key (kbd "RET") 'newline-and-indent)
+    (local-set-key (kbd "M-Q") 'reindent-whole-buffer)
+
+    (require 'nrepl-eval-sexp-fu)
+    (setq nrepl-eval-sexp-fu-flash-duration 0.25))
+#+END_SRC
+
+	Experimental sexp/keychord bindings.
+
+	Problem: "ql" is tied to "sql".
+#+BEGIN_SRC emacs-lisp
+  ;; (key-chord-define evil-insert-state-map "qh" 'sp-backward-up-sexp)
+  ;; (key-chord-define evil-insert-state-map "ql" 'sp-up-sexp)
+#+END_SRC
+
+** Clojure
+*** NESF - Cider
+#+BEGIN_SRC emacs-lisp
+  (defun nesf-initialize-cider ()
+    (define-nrepl-eval-sexp-fu-flash-command cider-eval-last-expression
+      (nrepl-eval-sexp-fu-flash (when (not (bolp ))
+                                  (with-nesf-end-of-sexp
+                                    (save-excursion
+                                      (skip-chars-backward " \t")
+                                      (bounds-of-thing-at-point 'sexp))))))
+    (define-nrepl-eval-sexp-fu-flash-command cider-pprint-eval-last-expression
+      (nrepl-eval-sexp-fu-flash (when (not (bolp))
+                                  (with-nesf-end-of-sexp
+                                    (save-excursion
+                                      (skip-chars-backward " \t")
+                                      (bounds-of-thing-at-point 'sexp))))))
+    (define-nrepl-eval-sexp-fu-flash-command cider-eval-defun-at-point
+      (nrepl-eval-sexp-fu-flash  (with-nesf-end-of-sexp
+                                   (when (not (and (nesf-live-lisp-top-level-p)
+                                                   (save-excursion
+                                                     (ignore-errors (forward-char))
+                                                     (nesf-live-lisp-top-level-p))
+                                                   (nesf-live-whitespace-at-point-p)
+                                                   (not (save-excursion (sp-up-sexp)))))
+                                     (save-excursion
+                                       (save-match-data
+                                         (while (sp-up-sexp))
+                                         (if (nesf-live-whitespace-at-point-p)
+                                           (let ((end (point)))
+                                             (backward-sexp)
+                                             (cons (point) end))
+                                           (bounds-of-thing-at-point 'sexp))))))))
+
+    (progn
+      ;; Defines:
+      ;; `nrepl-eval-sexp-fu-nrepl-eval-expression-inner-list',
+      ;; `nrepl-eval-sexp-fu-nrepl-eval-expression-inner-sexp'
+      ;; and the pprint variants respectively.
+      (define-nrepl-eval-sexp-fu-eval-sexp nrepl-eval-sexp-fu-cider-eval-expression
+        cider-eval-last-expression)
+      (define-nrepl-eval-sexp-fu-eval-sexp nrepl-eval-sexp-fu-cider-pprint-eval-expression
+        cider-pprint-eval-last-expression)))
+#+END_SRC
+*** General Setup
+#+BEGIN_SRC emacs-lisp
+  (require 'smartparens)
+
+  (sp-local-pair 'clojure-mode "(coment " ")")
+
+  (add-hook 'clojure-mode-hook
+            (lambda ()
+              (standard-lisp-modes)
+
+              (require 'nrepl)
+              (require 'cider)
+              ;; (load "nrepl-client")
+
+              (require 'clj-refactor)
+              (clj-refactor-mode 1)
+              (cljr-add-keybindings-with-prefix "C-c C-r")
+
+              
+
+              (require 'clojure-test-mode)
+              
+              (nesf-initialize-cider)
+
+              (require 'ac-nrepl)
+              (add-to-list 'ac-modes 'cider-mode)
+              (add-hook 'cider-mode-hook 'ac-nrepl-setup)
+              ;; (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
+
+              ;; (setq
+              ;;  cider-popup-stacktraces nil
+              ;;  cider-repl-pop-to-buffer-on-connect nil
+              ;;  cider-hide-special-buffers t
+              ;;  cider-repl-print-length 120
+              ;;  )
+
+              (local-set-key (kbd "C-c M-n") 'cider-set-ns)))
+
+  (defun helm-clojure-headlines ()
+    (interactive)
+    (helm :sources '(((name . "Clojure Headlines")
+                      (volatile)
+                      (headline "^[;(]")))))
+
+#+END_SRC
+
+*** Custom Keyword Handling.
+        #+BEGIN_SRC emacs-lisp
+      (defun clojure-mode-defaults ()
+        ;; My preferences
+        (define-clojure-indent
+          (until 'defun)
+          (match 'defun)
+          (do-template 'defun)
+          (domonad 2)
+          (doto-let 'defun)
+          (thrown-with-msg? 2))
+
+        ;; core.typed
+        (define-clojure-indent
+          (ann 'defun)
+          (def-alias 'defun))
+
+        ;; Expectations
+        (define-clojure-indent
+          (expect-let 'defun)
+          (expect-focused 'defun)
+          (context 1)
+          (freeze-time 1)
+          (redef-state 1)
+          (from-each 1)
+          )
+
+        ;; Compojure
+        (define-clojure-indent
+          (defroutes 'defun)
+          (GET 2)
+          (POST 2)
+          (PUT 2)
+          (DELETE 2)
+          (HEAD 2)
+          (ANY 2)
+          (context 2)))
+
+      (add-hook 'clojure-mode-hook 'clojure-mode-defaults)
+
+      ;;  ^(def*)
+      (font-lock-add-keywords 'clojure-mode
+                              `((,(rx line-start
+                                      "("
+                                      (group "def" (1+ word))
+                                      (1+ space)
+                                      (group (1+ word)))
+                                 (1 font-lock-keyword-face)
+                                 (2 font-lock-function-name-face))))
+        #+END_SRC
+
+        I am a font-lock hipster.
+
+        #+BEGIN_SRC emacs-lisp
+
+      ;; Expectations.
+      (font-lock-add-keywords 'clojure-mode
+                              `((,(rx "("
+                                      (group (or "until" "facts" "fact" "tabular"
+                                                 "expect" "expect-let" "given"
+                                                 "doto-let")))
+                                 (1 font-lock-keyword-face))))
+
+      ;; Lambda hipsterness.
+      (font-lock-add-keywords 'clojure-mode
+                              `(("(\\(fn\\)\\>" (0 (prog1 ()
+                                                     (compose-region (match-beginning 1)
+                                                                     (match-end 1)
+                                                                     ?λ))))))
+
+      ;; Core.Type.
+      ;; (font-lock-add-keywords 'clojure-mode
+      ;;                         `((,(rx "("
+      ;;                                 (group "ann")
+      ;;                                 (1+ space)
+      ;;                                 (optional "^:no-check"
+      ;;                                           (1+ space))
+      ;;                                 (group (1+ word)))
+      ;;                            (1 font-lock-keyword-face)
+      ;;                            (2 font-lock-function-name-face))))
+        #+END_SRC
+
+*** Clojure + Org Babel
+#+BEGIN_SRC emacs-lisp
+  (eval-after-load "ob-clojure"
+    '(defun org-babel-execute:clojure (body params)
+       "Execute a block of Clojure code with Babel and Cider."
+       (require 'cider)
+       (if (nrepl-current-connection-buffer)
+         (destructuring-bind
+             (&key value stdout stderr &allow-other-keys)
+             (cider-eval-sync (org-babel-expand-body:clojure body params))
+           (if stderr
+             stderr
+             value))
+         (error "Cider not connected!"))))
+#+END_SRC
+
+*** Cider Extensions
+
+Stuart Sierra's Reloaded Pattern support.
+
+=clojure.tools.namespace.repl/refresh= is a little annoying, in that its
+return value isn't very interesting. It prints the juicy stuff to
+stdout/err, so we have to capture that.
+
+#+BEGIN_SRC emacs-lisp
+  (require 's)
+
+  (defun cider-stdinout-eval-handler (buffer)
+    (nrepl-make-response-handler
+     buffer
+     nil                                         ; Value Handler
+     (lambda (buffer value) (message (s-trim value))) ; Stdout Handler
+     (lambda (buffer error) (message (s-trim error))) ; Stderr Handler
+     nil                                         ; Done Handler
+     ))
+
+  (defun cider-refresh-all-namespaces ()
+    "Uses clojure.tools.namespace.repl to refresh all namespaces."
+    (interactive)
+    (save-buffer)
+    (cider-eval "(require 'clojure.tools.namespace.repl)
+                 (let [result (clojure.tools.namespace.repl/refresh)]
+                   (when (not= :ok result)
+                     (println result)))"
+                (cider-stdinout-eval-handler (cider-current-repl-buffer))))
+
+  (eval-after-load "clojure-mode"
+    '(progn
+       (define-key clojure-mode-map (kbd "M-r") 'cider-refresh-all-namespaces)))
+#+END_SRC
+
+	 Expectations.
+
+#+BEGIN_SRC emacs-lisp
+  (defun cider-run-expectation-tests ()
+    "Runs all expectation tests."
+    (interactive)
+    (save-buffer)
+    (cider-interactive-eval "(require 'expectations)
+                             (expectations/run-all-tests)
+                             :done"))
+
+  (eval-after-load "clojure-mode"
+    '(progn
+       (define-key clojure-mode-map (kbd "C-c C-,") 'cider-run-expectation-tests)))
+#+END_SRC
+
+** ClojureScript
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'clojurescript-mode-hook
+            (lambda ()
+              (add-to-list 'sp-navigate-reindent-after-up 'clojurescript-mode)))
+#+END_SRC
+
+** Emacs Lisp
+#+BEGIN_SRC emacs-lisp
+  (setq initial-major-mode 'emacs-lisp-mode)
+  (add-hook 'emacs-lisp-mode-hook
+            (lambda ()
+              (standard-lisp-modes)
+              (eldoc-mode t)
+              (font-lock-add-keywords 'emacs-lisp-mode
+                                      '(("(\\(lambda\\)\\>" (0 (prog1 ()
+                                                            (compose-region (match-beginning 1)
+                                                                            (match-end 1)
+                                                                            ?λ))))))))
+
+  (defun helm-elisp-headlines ()
+    (interactive)
+    (helm :sources '(((name . "Elisp Headlines")
+                      (volatile)
+                      (headline "^[(]")))))
+
+#+END_SRC
+
+I'd like certain forms to be indented in Clojure's style.
+
+#+BEGIN_SRC emacs-lisp
+  (put 'if 'lisp-indent-function 1)
+  (put '->> 'lisp-indent-function 0)
+  (put '-> 'lisp-indent-function 0)
+#+END_SRC
+
 * Utility functions
 
 ** Move line
@@ -293,7 +590,7 @@
   
   (setq org-agenda-files
         '("~/Dropbox/org"
-          "~/Dropbox/RealTimePython/"))
+          "~/org"))
   
   (setq org-default-notes-file (concat org-directory "/inbox.org"))
   (define-key global-map "\C-cc" 'org-capture)
@@ -321,7 +618,6 @@
 #+END_SRC
 *** Todo setup
 #+BEGIN_SRC emacs-lisp :results silent
-  (require 'org-trello)
   (setq org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
           (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")))
@@ -644,7 +940,7 @@
 ** Exporting
 *** Reveal
 #+BEGIN_SRC emacs-lisp :returns silent
-  (require 'ox-reveal)
-  (setq org-reveal-root "~/Dropbox/org/presentations/reveal.js")
+  ;; (require 'ox-reveal)
+  ;; (setq org-reveal-root "~/Dropbox/org/presentations/reveal.js")
   
 #+END_SRC
