@@ -71,7 +71,9 @@
                  (when current
                    (or (eq 'Do (shm-node-cons current))
                        (string= "Stmt" (shm-node-type-name current))))))
-          (shm-auto-insert-stmt 'qualifier))
+          (if (bound-and-true-p structured-haskell-repl-mode)
+              (insert " ")
+            (shm-auto-insert-stmt 'qualifier)))
          ((looking-back "[^a-zA-Z0-9_]case")
           (shm-auto-insert-case))
          ((looking-back "[^a-zA-Z0-9_]if")
@@ -148,19 +150,21 @@ the current node to the parent."
   (interactive "p")
   (if (shm-in-comment)
       (self-insert-command n)
-    (let* ((current-pair (shm-current-node-pair))
-           (current (cdr current-pair))
-           (parent-pair (shm-node-parent current-pair))
-           (parent (cdr parent-pair)))
-      (cond
-       ;; When inside a list, indent to the list's position with an
-       ;; auto-inserted comma.
-       ((eq 'List (shm-node-cons parent))
-        (shm-insert-string ",")
-        (shm-set-node-overlay parent-pair))
-       (t
-        (shm-insert-string ",")
-        (shm-set-node-overlay parent-pair))))))
+    (let ((current-pair (shm-current-node-pair)))
+      (if (not current-pair)
+          (self-insert-command n)
+        (let* ((current (cdr current-pair))
+               (parent-pair (shm-node-parent current-pair))
+               (parent (cdr parent-pair)))
+          (cond
+           ;; When inside a list, indent to the list's position with an
+           ;; auto-inserted comma.
+           ((eq 'List (shm-node-cons parent))
+            (shm-insert-string ",")
+            (shm-set-node-overlay parent-pair))
+           (t
+            (shm-insert-string ",")
+            (shm-set-node-overlay parent-pair))))))))
 
 (defun shm/single-quote ()
   "Delimit single quotes."
