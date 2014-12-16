@@ -103,11 +103,12 @@
 ** Get rid of menu and scroll bar
 
 #+BEGIN_SRC emacs-lisp :results silent
-  
+
   (when (window-system)
     (tool-bar-mode -1)
+    (menu-bar-mode -1)
     (scroll-bar-mode -1))
-  
+
 #+END_SRC
 
 ** Fring and mode line set up
