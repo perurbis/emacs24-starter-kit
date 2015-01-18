@@ -11,6 +11,17 @@
   (global-linum-mode t)
   
 #+END_SRC
+** Nix setup
+#+BEGIN_SRC emacs-lisp :results silent
+  (setq load-path
+          (cons (concat (getenv "HOME") "/.nix-profile/share/emacs/site-lisp")
+                load-path))
+  (require 'tramp) 
+  (add-to-list 'tramp-remote-path "/run/current-system/sw/bin")
+  (autoload 'nix-mode "nix-mode" "Major mode for editing Nix expressions." t)
+   (push '("\\.nix\\'" . nix-mode) auto-mode-alist)
+   (push '("\\.nix.in\\'" . nix-mode) auto-mode-alist)
+#+END_SRC
 * Global key bindings
 #+BEGIN_SRC emacs-lisp :results silent
   
@@ -101,16 +112,19 @@
 #+END_SRC
 
 ** Get rid of menu and scroll bar
+Also set the split-hieght to stop emacs creating loads of windows
 
 #+BEGIN_SRC emacs-lisp :results silent
-  
+
   (when (window-system)
     (tool-bar-mode -1)
-    (scroll-bar-mode -1))
-  
+    (menu-bar-mode -1)
+    (scroll-bar-mode -1)
+    (setq split-height-threshold 1200))
+
 #+END_SRC
 
-** Fring and mode line set up
+** Fringe and mode line set up
 
 #+BEGIN_SRC emacs-lisp :results silent
 
