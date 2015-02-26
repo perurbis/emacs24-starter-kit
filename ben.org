@@ -153,23 +153,23 @@ Also set the split-hieght to stop emacs creating loads of windows
 
 * Helm
 #+BEGIN_SRC emacs-lisp :results silent
-  (require 'helm-misc)
-  (require 'helm-projectile)
-  
-  (defun helm-prelude ()
-    "Preconfigured `helm'."
-    (interactive)
-    (condition-case nil
-        (if (projectile-project-root)
-            (helm-projectile)
-          ;; otherwise fallback to `helm-mini'
-          (helm-mini))
-      ;; fall back to helm mini if an error occurs (usually in `projectile-project-root')
-      (error (helm-mini))))
-  
-  (eval-after-load 'prelude-mode
-    '(define-key prelude-mode-map (kbd "C-c h") 'helm-prelude))
-  
+  ;;(require 'helm-misc)
+  ;;(require 'helm-projectile)
+
+  ;; (defun helm-prelude ()
+  ;;   "Preconfigured `helm'."
+  ;;   (interactive)
+  ;;   (condition-case nil
+  ;;       (if (projectile-project-root)
+  ;;           (helm-projectile)
+  ;;         ;; otherwise fallback to `helm-mini'
+  ;;         (helm-mini))
+  ;;     ;; fall back to helm mini if an error occurs (usually in `projectile-project-root')
+  ;;     (error (helm-mini))))
+
+  ;; (eval-after-load 'prelude-mode
+  ;;   '(define-key prelude-mode-map (kbd "C-c h") 'helm-prelude))
+
 #+END_SRC
 * Haskell Mode
 
@@ -177,7 +177,7 @@ Also set the split-hieght to stop emacs creating loads of windows
   
   (load "haskell-mode-autoloads")
   ;; (autoload 'ghc-init "ghc" nil t)
-  (add-to-list 'load-path "src/shm/elisp") 
+  ;;(add-to-list 'load-path "src/shm/elisp") 
   (require 'haskell-mode)
   (require 'hsenv)
   ;;(require 'shm)
@@ -193,7 +193,7 @@ Also set the split-hieght to stop emacs creating loads of windows
    '(haskell-tags-on-save t)
   
    ;; To enable stylish on save.
-   '(haskell-stylish-on-save nil))
+   '(haskell-stylish-on-save t))
   
   (add-hook 'haskell-mode-hook 'haskell-hook)
   ;;(add-hook 'haskell-mode-hook 'structured-haskell-mode)
@@ -625,10 +625,12 @@ I'd like certain forms to be indented in Clojure's style.
            "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
           ("c" "capture" entry (file+headline "~/Dropbox/org/notes.org" "Capture")
            "* %^{Title}  :capture:\n\n  Source: %u, %c\n\n  %i"
-           :empty-lines 1 )))
-  
+           :empty-lines 1 )
+          ("j" "Journal" entry (file+datetree "~/Dropbox/org/journal.org")
+               "* %?\nEntered on %U\n  %i\n  %a") ))
+
   (setq org-capture-default-template "c")
-  
+
 #+END_SRC
 *** Todo setup
 #+BEGIN_SRC emacs-lisp :results silent
