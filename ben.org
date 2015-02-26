@@ -591,8 +591,6 @@ I'd like certain forms to be indented in Clojure's style.
   
 #+END_SRC
 
-
-   
 * Org set up
 
 ** Directories
