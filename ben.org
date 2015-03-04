@@ -85,26 +85,30 @@
   (defun path-from-shell (sh-cmd)
     "Get the $PATH from a login shell"
     ;;(interactive)
-  
+
     (split-string (replace-regexp-in-string "[ \t\n]*$" ""
                                             (shell-command-to-string
                                              (concat (executable-find sh-cmd) " --login -i -c 'echo $PATH'")))
-                  path-separator)
-    )
-  
+                  path-separator))
+
   (defun set-exec-path-from-shell-PATH (sh-cmd)
     "Set up Emacs' `exec-path' and PATH environment variable to match that used by the user's shell.
-  
+
   This is particularly useful under Mac OSX, where GUI apps are not started from a shell."
     (interactive)
     (let ((path (path-from-shell sh-cmd)))
       (setenv "PATH" (mapconcat (lambda (e) e) path path-separator))
       (setq exec-path path)
       ))
-  
+
   (set-exec-path-from-shell-PATH "zsh")
-  
+
 #+END_SRC
+** Set cabal repl defer type errors
+#+BEGIN_SRC elisp :results silent
+  (setq haskell-process-args-cabal-repl '("--ghc-options='-fdefer-type-errors'"))
+#+END_SRC
+
 * Theme
 #+BEGIN_SRC emacs-lisp :results silent
   (load-theme 'solarized-dark)
@@ -120,7 +124,7 @@ Also set the split-hieght to stop emacs creating loads of windows
     (tool-bar-mode -1)
     (menu-bar-mode -1)
     (scroll-bar-mode -1)
-    (setq split-height-threshold 1200)
+    (setq split-height-threshold 1200))
 
 #+END_SRC
 
